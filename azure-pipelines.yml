@@ -14,7 +14,12 @@ stages:
         versionSpec: '3.x'
     - script: |
         python -m venv env
-        source env/bin/activate
+        # Windows specific activation
+        if [ "$AGENT_OS" == "Windows_NT" ]; then
+          env\Scripts\activate
+        else
+          source env/bin/activate
+        fi
       displayName: 'Set up Python environment'
 
 - stage: Test
@@ -26,6 +31,11 @@ stages:
       inputs:
         versionSpec: '3.x'
     - script: |
-        source env/bin/activate
+        # Activate environment (cross-platform)
+        if [ "$AGENT_OS" == "Windows_NT" ]; then
+          env\Scripts\activate
+        else
+          source env/bin/activate
+        fi
         python -m unittest discover -s tests
       displayName: 'Run tests'
