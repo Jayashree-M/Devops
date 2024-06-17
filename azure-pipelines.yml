@@ -15,7 +15,14 @@ stages:
     - script: |
         python -m venv env
         source env/bin/activate
-      displayName: 'Set up Python environment'
+        pip install coverage
+      displayName: 'Set up Python environment and install coverage'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'env'
+        artifactName: 'env'
+        publishLocation: 'Container'
+      displayName: 'Publish virtual environment'
 
 - stage: Test
   dependsOn: Build
@@ -25,7 +32,26 @@ stages:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: '3.x'
+    - task: DownloadBuildArtifacts@0
+      inputs:
+        artifactName: 'env'
+        downloadPath: '$(Pipeline.Workspace)/env'
+      displayName: 'Download virtual environment'
     - script: |
-        source env/bin/activate
-        python -m unittest discover -s tests
-      displayName: 'Run tests'
+        source $(Pipeline.Workspace)/env/bin/activate
+        coverage run -m unittest discover -s tests
+        coverage xml -o coverage.xml
+        coverage html -d coverage_html_report
+      displayName: 'Run tests with coverage'
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: 'Cobertura'
+        summaryFileLocation: 'coverage.xml'
+        reportDirectory: 'coverage_html_report'
+      displayName: 'Publish code coverage results'
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: 'coverage_html_report'
+        artifactName: 'coverage'
+        publishLocation: 'Container'
+      displayName: 'Publish coverage HTML report as build artifact'
