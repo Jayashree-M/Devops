@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-  vmImage: 'windows-latest'
+  vmImage: 'ubuntu-latest'
 
 stages:
 - stage: Build
@@ -14,12 +14,7 @@ stages:
         versionSpec: '3.x'
     - script: |
         python -m venv env
-        # Windows specific activation
-        if [ "$AGENT_OS" == "Windows_NT" ]; then
-          env\Scripts\activate
-        else
-          source env/bin/activate
-        fi
+        source env/bin/activate
       displayName: 'Set up Python environment'
 
 - stage: Test
@@ -31,11 +26,6 @@ stages:
       inputs:
         versionSpec: '3.x'
     - script: |
-        # Activate environment (cross-platform)
-        if [ "$AGENT_OS" == "Windows_NT" ]; then
-          env\Scripts\activate
-        else
-          source env/bin/activate
-        fi
+        source env/bin/activate
         python -m unittest discover -s tests
       displayName: 'Run tests'
